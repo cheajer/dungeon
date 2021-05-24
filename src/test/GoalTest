@@ -1,0 +1,115 @@
+package test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
+import org.junit.jupiter.api.Test;
+// import org.junit.jupiter.params.ParameterizedTest;
+// import org.junit.jupiter.params.provider.ValueSource;
+
+import unsw.dungeon.*;
+
+import java.util.SimpleTimeZone;
+
+public class GoalTest {
+
+    /**
+     * J Unit tests for Treasure Objective in Dungeon game
+     *
+     * Testing cases:
+     * - Upon collecting all treasure, completion flag raised
+     * - Flag should only be raised if it is a specific goal outline in level input
+     * - If this is the  sole completion criteria, level will end
+     *
+     */
+    @Test
+    public void treasureObjective() {
+        Dungeon d = new Dungeon(20, 20);
+        Treasure t1 = new Treasure (0,1);
+        Treasure t2 = new Treasure (0,2);
+        Treasure t3 = new Treasure (0,3);
+        Player p = new Player(d, 0,0);
+        TreasureObjective obj = new TreasureObjective();
+
+        d.setPlayer(p);
+        d.addEntity(t1);
+        d.addEntity(t2);
+        d.addEntity(t3);
+        d.addEntity(p);
+
+        d.getObjectives().add(obj);
+
+        assertEquals(false, d.getDungeonCompletion());
+        assertEquals(3, Treasure.getTreasureCount());
+        assertEquals(false, Treasure.checkTreasureObjective());
+        p.moveDown();
+        p.moveDown();
+        p.moveDown();
+
+        //d.objectivesCompleted();
+        assertEquals(0, Treasure.getTreasureCount());
+        assertEquals(true, Treasure.checkTreasureObjective());
+        assertEquals(true, d.getDungeonCompletion());
+        d.resetDungeon();
+    }
+    /**
+     * J Unit tests for Enemy Objective in Dungeon game
+     *
+     * Testing cases:
+     * - Upon death of all enemies, completion criteria flag raised
+     * - Flag should only be raised if it is a specific goal outline in level input
+     * - If this is the  sole completion criteria, level will end
+     *
+     */
+    @Test
+    public void enemyTest() {
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 0, 0);
+        Enemy e = new Enemy(6, 0, d);
+        EnemyObjective objec = new EnemyObjective();
+        d.getObjectives().add(objec);
+
+        //assertEquals(false, d.objectivesCompleted());
+        d.killEnemy(e);
+       // assertEquals(true, d.objectivesCompleted());
+        //assertEquals(true, d.getDungeonCompletion());
+        d.resetDungeon();
+    }
+    /**
+     * J Unit tests for Switch Objective in Dungeon game
+     *
+     * Testing cases:
+     * - Upon activation of all floor switches, a completion criteria flag can be raised
+     * - Flag should only be raised if it is a specific goal outline in level input
+     * - If this is the  sole completion criteria, level will end
+     *
+     */
+    @Test
+    public void switchTest() {
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 0, 0);
+        SwitchEntity s = new SwitchEntity(0, 2);
+        Boulder b = new Boulder(0, 1);
+        SwitchObjective ob = new SwitchObjective();
+
+        d.getObjectives().add(ob);
+
+        d.addEntity(p);
+        d.addEntity(s);
+        d.addEntity(b);
+
+        d.setPlayer(p);
+
+        assertEquals(1, SwitchEntity.getSwitchCount());
+        //assertEquals(false, d.objectivesCompleted());
+
+        p.moveDown();
+        assertEquals(0, SwitchEntity.getSwitchCount());
+        
+
+        //assertEquals(true, d.objectivesCompleted());
+        assertEquals(true, d.getDungeonCompletion());
+        d.resetDungeon();
+
+    }
+}

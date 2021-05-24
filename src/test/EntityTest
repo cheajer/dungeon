@@ -1,0 +1,380 @@
+package test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
+import org.junit.jupiter.api.Test;
+// import org.junit.jupiter.params.ParameterizedTest;
+// import org.junit.jupiter.params.provider.ValueSource;
+
+import unsw.dungeon.*;
+
+public class EntityTest {
+    /**
+     * J Unit tests for Enemy entity in Dungeon game
+     *
+     * Testing cases:
+     * - Default movement patterns, chasing after player.
+     * - Upon collision with an enemy the player should die.
+     *
+     */
+    @Test
+    public void enemyTest(){
+        Dungeon d = new Dungeon(20, 20);
+        Enemy e = new Enemy(5, 0, d);
+        d.addEntity(e);
+        EnemyChase chase = new EnemyChase();
+        Enemy.setPattern(chase);
+        Player p = new Player(d, 10, 0);
+        d.setPlayer(p);
+        d.addEntity(p);
+        e.move(p);
+        e.move(p);
+
+        assertEquals(7, e.getX());
+        assertEquals(0, e.getY());
+
+        e.move(p);
+        e.move(p);
+        e.move(p);
+
+        assertEquals(10, e.getX());
+        assertEquals(0, e.getY());
+
+        assertEquals(p.checkInvulnerability(),false);
+        
+        assertEquals(p.getStatus(),false);
+        d.resetDungeon();
+
+    }
+    @Test
+    public void wallTest() {
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 3, 2);
+        Enemy e = new Enemy(1, 1, d);
+        Wall w1 = new Wall(0, 0);
+        Wall w2 = new Wall(1, 0);
+        Wall w3 = new Wall(2, 0);
+        Wall w4 = new Wall(0, 1);
+        Wall w6 = new Wall(2, 1);
+        Wall w7 = new Wall(0, 2);
+        Wall w8 = new Wall(1, 2);
+        Wall w9 = new Wall(2, 2);
+
+        EnemyChase chase = new EnemyChase();
+        Enemy.setPattern(chase);
+
+        d.setPlayer(p);
+        d.addEntity(p);
+        d.addEntity(w1);
+        d.addEntity(w2);
+        d.addEntity(w3);
+        d.addEntity(w4);
+        d.addEntity(w6);
+        d.addEntity(w7);
+        d.addEntity(w8);
+        d.addEntity(w9);
+        d.addEntity(e);
+
+        e.move(p);
+
+        assertEquals(1, e.getX());
+        assertEquals(1, e.getY());
+
+        p.moveLeft();
+
+        assertEquals(3, p.getX());
+        assertEquals(2, p.getY());
+        d.resetDungeon();
+    }
+    /**
+     * J Unit tests for exit entity in Dungeon game
+     *
+     * Testing cases:
+     * - If player goes to exit, complete game.
+     * - If player hasnt fulfilled objective requirements cannot enter
+     *
+     */
+    @Test
+    public void exitTest() {
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 0, 0);
+        Exit ex = new Exit(1,0);
+        d.setPlayer(p);
+        d.addEntity(p);
+        d.addEntity(ex);
+
+        ExitObjective exitObj = new ExitObjective();
+
+        d.getObjectives().add(exitObj);
+
+        p.moveRight();
+
+        assertEquals(1, p.getX());
+        assertEquals(0, p.getY());
+
+        assertEquals(d.getDungeonCompletion(), true);
+        d.resetDungeon();
+    }
+    /**
+     * J Unit tests for Boulder entity in Dungeon game
+     *
+     * Testing cases:
+     * - Upon walking into a boulder while adjacent to it, the player 
+     *   will push the boulder one square
+     * - Upon collision with an enemy the player should die.
+     * - If the boulder is put onto a floor switch square, it activates the floor switch
+     * - The player can only push one boulder at a time, so if two boulders come into contact, 
+     *   the player will be unable to push either in the direction of the other boulder.
+     * - Boulders should act as walls in any other context
+     *
+     */
+    @Test
+    public void boulderTest() {
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 0, 0);
+        Enemy e = new Enemy(6, 0, d);
+        Boulder b = new Boulder(1, 0);
+        Boulder b1 = new Boulder(3, 0);
+        Boulder b2 = new Boulder(5, 0);
+
+        d.setPlayer(p);
+        d.addEntity(p);
+        d.addEntity(b);
+        d.addEntity(b1);
+        d.addEntity(e);
+        d.addEntity(b2);
+
+        p.moveRight();
+        assertEquals(2, b.getX());
+        p.moveRight();
+        p.moveRight();
+        assertEquals(2, b.getX());
+        assertEquals(1, p.getX());
+        e.move(p);
+        e.move(p);
+        assertEquals(6, e.getX());
+        d.resetDungeon();
+
+    }
+    /**
+     * J Unit tests for Switch entity in Dungeon game
+     *
+     * Testing cases:
+     *  - Switches act as floor tiles and thus should have the properties of a floor tile
+     *  - The switch is only activated when a boulder is on its square
+     *  - Other entities should be able to spawn on top of floor switches
+     *
+     */
+    @Test
+    public void switchTest() {
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 0, 0);
+        Boulder b = new Boulder(1, 0);
+        SwitchEntity se = new SwitchEntity(2, 0);
+
+        d.setPlayer(p);
+        d.addEntity(p);
+        d.addEntity(b);
+        d.addEntity(se);
+
+        p.moveRight();
+        p.moveRight();
+
+        assertEquals(1, p.getX());
+        assertEquals(2, b.getX());
+
+        assertEquals(se.getStatus(), true);
+
+        p.moveRight();
+        p.moveRight();
+
+        assertEquals(2, p.getX());
+
+        assertEquals(se.getStatus(), false);
+        d.resetDungeon();
+    }
+    @Test
+    public void playerTest() {
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 0, 0);
+
+        d.setPlayer(p);
+        d.addEntity(p);
+
+        p.moveUp();
+        assertEquals(0, p.getX());
+
+        p.moveDown();
+        assertEquals(1,p.getY());
+
+        p.moveUp();
+        assertEquals(0, p.getY());
+
+        p.moveRight();
+        assertEquals(1, p.getX());
+
+        p.moveLeft();
+        assertEquals(0, p.getX());
+        d.resetDungeon();
+    }
+    /**
+     * J Unit tests for Door entity in Dungeon game
+     *
+     * Testing cases:
+     *  - Doors must act like a wall if unopened by a key
+     *  - Doors can be traversed if walked through holding a key
+     *  - Each door has a unique key
+     *  - There can be up to 3 doors/keys in a level
+     *
+     */
+    @Test
+    public void doorKeyTest() {
+        Door door1 = new Door(2, 0);
+        Door opendoor1 = new Door(21, 0);
+        door1.setID(Door.getN_doors());
+        Door.incrementN_door();
+        door1.setOpen_door(opendoor1);
+
+        Door door2 = new Door(3, 0);
+        Door opendoor2 = new Door(21, 0);
+        door2.setID(Door.getN_doors());
+        Door.incrementN_door();
+        door2.setOpen_door(opendoor2);
+
+        Door door3 = new Door(4, 0);
+        Door opendoor3 = new Door(21, 0);
+        door3.setID(Door.getN_doors());
+        Door.incrementN_door();
+        door3.setOpen_door(opendoor3);
+
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 0, 0);
+
+        Key key1 = new Key(0, 2);
+        Key key2 = new Key(0, 3);
+        Key key3 = new Key(0, 4);
+
+        d.setPlayer(p);
+        d.addEntity(p);
+        d.addEntity(door1);
+        d.addEntity(door2);
+        d.addEntity(door3);
+        d.addEntity(key1);
+        d.addEntity(key2);
+        d.addEntity(key3);
+        d.addEntity(opendoor1);
+        d.addEntity(opendoor2);
+        d.addEntity(opendoor3);
+
+        opendoor1.setOpened(true);
+        opendoor2.setOpened(true);
+        opendoor3.setOpened(true);
+
+
+
+        p.moveRight();
+        p.moveDown();
+        p.moveRight();
+        p.moveUp();
+        assertEquals(2, p.getX());
+        assertEquals(1, p.getY());
+        p.moveRight();
+        p.moveUp();
+        assertEquals(3, p.getX());
+        assertEquals(1, p.getY());
+        p.moveRight();
+        p.moveUp();
+        assertEquals(4, p.getX());
+        assertEquals(1, p.getY());
+
+        p.moveDown();
+        moveLeft(p, 5);
+        moveDown(p, 2);
+        assertEquals(0, p.getX());
+        assertEquals(4, p.getY());
+
+        moveRight(p, 2);
+        moveUp(p, 5);
+        assertEquals(2, p.getX());
+        assertEquals(0, p.getY());
+
+        p.moveRight();
+        p.moveRight();
+        assertEquals(3, p.getX());
+        assertEquals(0, p.getY());
+
+        p.moveRight();
+        p.moveRight();
+        assertEquals(4, p.getX());
+        assertEquals(0, p.getY());
+        d.resetDungeon();
+    }
+    /**
+     * J Unit tests for Portal entity in Dungeon game
+     *
+     * Testing cases:
+     *  - A portal will teleport a player  walking into it to another spot on grid
+     *  - Items cannot spawn in portals
+     *  - Enemies are unable to go through portals
+     *  - Players are able to go through portals
+     *  - A portal must be bi-directional
+     *
+     */
+    @Test
+    public void portalTest() {
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 0, 1);
+        Portal porIn = new Portal(0, 2);
+        Portal porOut = new Portal(20,15);
+        Enemy e = new Enemy(0, 0, d);
+        EnemyChase chase = new EnemyChase();
+        Enemy.setPattern(chase);
+
+        d.addEntity(porIn);
+        d.addEntity(porOut);
+        d.addEntity(p);
+        d.setPlayer(p);
+
+        p.moveDown();
+        e.move(p);
+        e.move(p);
+        
+
+
+        
+
+        assertEquals(20, p.getX());
+        assertEquals(15, p.getY());
+        assertNotEquals(15, e.getX());
+        assertNotEquals(20, e.getY());
+
+        p.moveDown();
+        p.moveUp();
+        assertEquals(0, p.getX());
+        assertEquals(2, p.getY());
+
+        d.resetDungeon();
+    }
+    public void moveUp(Player player, int x) {
+        for (int i=0; i < x; i++)
+            player.moveUp();
+    }
+    public void moveDown(Player player, int x) {
+        for (int i=0; i < x; i++)
+            player.moveDown();
+
+    }
+    public void moveLeft(Player player, int x) {
+        for (int i=0; i < x; i++)
+            player.moveLeft();
+
+    }
+    public void moveRight(Player player, int x) {
+        for (int i=0; i < x; i++)
+            player.moveRight();
+
+    }
+
+}
+

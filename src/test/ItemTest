@@ -1,0 +1,183 @@
+package test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
+import org.junit.jupiter.api.Test;
+// import org.junit.jupiter.params.ParameterizedTest;
+// import org.junit.jupiter.params.provider.ValueSource;
+
+import unsw.dungeon.*;
+
+public class ItemTest {
+    /**
+     * J Unit tests for Treasure item in Dungeon game
+     *
+     * Testing cases:
+     * - Pick up treasure by walking over.
+     * - Upon collecting all treasure, raise objective flag.
+     *
+     */
+    @Test
+    public void treasureTest() {
+        Dungeon d = new Dungeon(20, 20);
+        Treasure t = new Treasure (0,1);
+        Player p = new Player(d, 0,0);
+
+        d.setPlayer(p);
+        d.addEntity(t);
+        d.addEntity(p);
+
+        assertEquals(0, t.getX());
+        assertEquals(1, t.getY());
+        assertEquals(1, Treasure.getTreasureCount());
+        assertEquals(false, Treasure.checkTreasureObjective());
+        p.moveDown();
+
+        assertNotEquals(0, t.getX());
+        assertEquals(0, Treasure.getTreasureCount());
+        assertEquals(true, Treasure.checkTreasureObjective());
+    }
+    /**
+     * J Unit tests for Potion item in Dungeon game
+     *
+     * Testing cases:
+     * - Enemies run away from player when potion picked up
+     * - Touching an enemy will kill it
+     * - The potion's effects expire
+     *
+     */
+    @Test
+    public void potionTest() {
+        Dungeon d1 = new Dungeon(20, 20);
+        d1.resetDungeon();
+        Enemy e1 = new Enemy (0,10,d1);
+        Player p1 = new Player(d1, 0,0);
+        EnemyChase chase = new EnemyChase();
+        Enemy.setPattern(chase);
+
+        
+
+        d1.setPlayer(p1);
+        d1.addEntity(p1);
+        d1.addEntity(e1);
+        p1.moveDown();
+        e1.move(p1);
+        e1.move(p1);
+        int enemyPosY = e1.getY();
+
+
+        Dungeon d = new Dungeon(20, 20);
+        Enemy e = new Enemy (0,10,d);
+        Player p = new Player(d, 0,0);
+        Potion pot = new Potion(0,1);
+
+        d.setPlayer(p);
+        d.addEntity(p);
+        d.addEntity(e);
+        d.addEntity(pot);
+        p.moveDown();
+        e.move(p);
+        e.move(p);
+        assertNotEquals(0, pot.getX());
+        assertNotEquals(enemyPosY, e.getY());
+        assertEquals(12, e.getY());
+        assertEquals(2, Enemy.getEnemyCount());
+        moveDown(p, 12);
+        assertEquals(12, p.getY());
+        assertEquals(1, Enemy.getEnemyCount());
+        d.resetDungeon();
+    }
+    /**
+     * J Unit tests for Sword item in Dungeon game
+     *
+     * Testing cases:
+     * - User can only pick up one sword at a time
+     * - A sword can only be used 5 times before it breaks
+     * - Enemies hit by a sword die
+     * - a sword picked up by a player will disappear off grid
+     *
+     */
+    @Test
+    public void swordTest() {
+        
+        Dungeon d = new Dungeon(20, 20);
+        Player p = new Player(d, 0, 0);
+        d.resetDungeon();
+        Enemy e1 = new Enemy(2, 0, d);
+        Enemy e2 = new Enemy(3, 0, d);
+        Enemy e3 = new Enemy(4, 0, d);
+        Enemy e4 = new Enemy(5, 0, d);
+        Enemy e5 = new Enemy(6, 0, d);
+        Sword s = new Sword(1,0);
+        EnemyChase chase = new EnemyChase();
+        Enemy.setPattern(chase);
+        
+        d.addEntity(e1);
+        d.addEntity(e2);
+        d.addEntity(e3);
+        d.addEntity(e4);
+        d.addEntity(e5);
+        d.setPlayer(p);
+        d.addEntity(p);
+        d.addEntity(s);
+
+        assertEquals(false, p.checkSword());
+        p.moveRight();
+        assertNotEquals(1, s.getX());
+        assertEquals(true, p.checkSword());
+
+        e1.move(p);
+        e2.move(p);
+        e3.move(p);
+        e4.move(p);
+        e5.move(p);
+
+        e2.move(p);
+        e3.move(p);
+        e4.move(p);
+        e5.move(p);
+
+        e3.move(p);
+        e4.move(p);
+        e5.move(p);
+
+        e4.move(p);
+        e5.move(p);
+
+        e5.move(p);
+
+        assertEquals(false, p.checkSword());
+
+        assertNotEquals(1, e1.getX());
+        assertNotEquals(1, e2.getX());
+        assertNotEquals(1, e3.getX());
+        assertNotEquals(1, e4.getX());
+        assertNotEquals(1, e5.getX());
+        assertEquals(0, Enemy.getEnemyCount());
+        d.resetDungeon();
+    }
+    
+
+    // HELPER FUNCTIONS FOR PLAYER MOVEMENT
+    public void moveUp(Player player, int x) {
+        for (int i=0; i < x; i++)
+            player.moveUp();
+    }
+    public void moveDown(Player player, int x) {
+        for (int i=0; i < x; i++)
+            player.moveDown();
+
+    }
+    public void moveLeft(Player player, int x) {
+        for (int i=0; i < x; i++)
+            player.moveLeft();
+
+    }
+    public void moveRight(Player player, int x) {
+        for (int i=0; i < x; i++)
+            player.moveRight();
+
+    }
+    
+    
+}
